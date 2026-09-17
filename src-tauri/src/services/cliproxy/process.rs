@@ -83,10 +83,26 @@ impl CliproxyState {
             return Err("CLIProxyAPI engine is not installed yet".to_string());
         }
         config::write_config()?;
-        let mut child = tokio::process::Command::new(binary_path())
-            .arg("--config")
+        // Child output goes to engine.log — without it a crash loop is
+        // invisible (and unactionable) from the UI.
+        let log_file = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(root_dir().join("engine.log"))
+            .map_err(|e| format!("Cannot open engine log: {e}"))?;
+        let log_err = log_file
+            .try_clone()
+            .map_err(|e| format!("Cannot open engine log: {e}"))?;
+        let mut cmd = tokio::process::Command::new(binary_path());
+        cmd.arg("--config")
             .arg(config_path())
             .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::from(log_file))
+            .stderr(std::process::Stdio::from(log_err));
+        // No console window flash on Windows.
+        #[cfg(windows)]
+        cmd.creation_flags(0x0800_0000);
+        let mut child = cmd
             .spawn()
             .map_err(|e| format!("Cannot launch managed CLIProxyAPI: {e}"))?;
         // Health-gate before handing the child over: a port clash or a bad

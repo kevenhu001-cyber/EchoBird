@@ -40,7 +40,10 @@ pub fn write_config() -> Result<(), String> {
     fs::create_dir_all(auth_dir()).map_err(|e| format!("Cannot create auth dir: {e}"))?;
     // The management panel auto-downloads from GitHub on first access;
     // EchoBird ships its own UI, so keep the embedded instance quiet.
-    let auth_dir = auth_dir().display().to_string();
+    // Forward slashes even on Windows: backslashes inside double-quoted
+    // YAML are escape sequences (`C:\Users` fails to parse), and Windows
+    // APIs accept `/` fine.
+    let auth_dir = auth_dir().display().to_string().replace('\\', "/");
     // Built line by line: `\`-continuations would swallow the leading
     // whitespace YAML nesting depends on.
     let lines = [
