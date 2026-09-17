@@ -291,7 +291,7 @@ fn extract_binary(
         if status.success() {
             return Ok(());
         }
-        return Err(format!("tar failed to extract {binary_name}"));
+        Err(format!("tar failed to extract {binary_name}"))
     }
     #[cfg(windows)]
     {
@@ -307,6 +307,6 @@ fn extract_binary(
         if status.success() {
             return Ok(());
         }
-        return Err(format!("Expand-Archive failed for {binary_name}"));
+        Err(format!("Expand-Archive failed for {binary_name}"))
     }
 }
