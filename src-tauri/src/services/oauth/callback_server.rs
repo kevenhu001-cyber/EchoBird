@@ -59,8 +59,10 @@ struct CallbackState {
     /// Provider id, used in the success / error page title.
     provider_label: String,
     /// oneshot sender — when the callback fires, we hand the result over and
-    /// shut the server down. Drop = server stops listening.
-    tx: oneshot::Sender<CallbackResult>,
+    /// shut the server down. `oneshot::Sender` is not `Clone` (required by
+    /// axum `State`), so the single sender lives behind a shared slot: the
+    /// first callback hit takes it, replays find it empty.
+    tx: std::sync::Arc<std::sync::Mutex<Option<oneshot::Sender<CallbackResult>>>>,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -88,7 +90,7 @@ pub async fn run(
     let state = CallbackState {
         expected_state: expected_state.to_string(),
         provider_label: provider_label.to_string(),
-        tx,
+        tx: std::sync::Arc::new(std::sync::Mutex::new(Some(tx))),
     };
     let app = Router::new()
         .route("/auth/callback", get(handle_callback))
@@ -123,6 +125,24 @@ pub async fn preflight_port(port: u16) -> Result<(), String> {
     Ok(())
 }
 
+/// Take the one-shot sender out of the shared slot. `None` means a previous
+/// callback hit already consumed it (replay) — never blocks, never panics
+/// on a poisoned mutex (treats it as consumed).
+fn take_sender(state: &CallbackState) -> Option<oneshot::Sender<CallbackResult>> {
+    state.tx.lock().ok().and_then(|mut guard| guard.take())
+}
+
+/// The login session is gone: receiver dropped (user cancelled) or a replay
+/// after completion. The token exchange didn't run, so nothing to clean up.
+fn expired_page(provider_label: &str) -> Response {
+    log::warn!("[OAuthCallback] Session gone for {provider_label} before callback");
+    (
+        StatusCode::GONE,
+        Html("<h1>Login session expired</h1><p>You can close this tab.</p>".to_string()),
+    )
+        .into_response()
+}
+
 async fn handle_callback(
     State(state): State<CallbackState>,
     Query(params): Query<CallbackParams>,
@@ -140,47 +160,50 @@ async fn handle_callback(
             .as_deref()
             .unwrap_or("(no description)");
         let msg = format!("{err}: {desc}");
-        let _ = state.tx.send(CallbackResult::Error(msg.clone()));
+        if let Some(tx) = take_sender(&state) {
+            let _ = tx.send(CallbackResult::Error(msg.clone()));
+        }
         return error_page(&state.provider_label, &msg).into_response();
     }
 
     let Some(code) = params.code else {
         let msg = "missing authorization code".to_string();
-        let _ = state.tx.send(CallbackResult::Error(msg.clone()));
+        if let Some(tx) = take_sender(&state) {
+            let _ = tx.send(CallbackResult::Error(msg.clone()));
+        }
         return error_page(&state.provider_label, &msg).into_response();
     };
     let Some(redirect_state) = params.state else {
         let msg = "missing state parameter".to_string();
-        let _ = state.tx.send(CallbackResult::Error(msg.clone()));
+        if let Some(tx) = take_sender(&state) {
+            let _ = tx.send(CallbackResult::Error(msg.clone()));
+        }
         return error_page(&state.provider_label, &msg).into_response();
     };
 
     if redirect_state != state.expected_state {
         let msg = "state mismatch (possible CSRF)".to_string();
-        let _ = state.tx.send(CallbackResult::Error(msg.clone()));
+        if let Some(tx) = take_sender(&state) {
+            let _ = tx.send(CallbackResult::Error(msg.clone()));
+        }
         return error_page(&state.provider_label, &msg).into_response();
     }
 
     // All good. Hand off the code to the login task.
-    match state.tx.send(CallbackResult::Success {
-        code,
-        state: redirect_state,
-    }) {
-        Ok(()) => {}
-        Err(_) => {
-            // The receiver already dropped — the user cancelled or the login
-            // task errored out before the browser redirected. The token
-            // exchange didn't run, so nothing to clean up.
-            log::warn!(
-                "[OAuthCallback] Receiver dropped for {} before callback",
-                state.provider_label
-            );
-            return (
-                StatusCode::GONE,
-                Html("<h1>Login session expired</h1><p>You can close this tab.</p>".to_string()),
-            )
-                .into_response();
+    match take_sender(&state) {
+        Some(tx) => {
+            if tx
+                .send(CallbackResult::Success {
+                    code,
+                    state: redirect_state,
+                })
+                .is_err()
+            {
+                return expired_page(&state.provider_label).into_response();
+            }
         }
+        // Replay after a completed login — the session is already gone.
+        None => return expired_page(&state.provider_label).into_response(),
     }
 
     success_page(&state.provider_label).into_response()

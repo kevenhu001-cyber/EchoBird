@@ -15,7 +15,7 @@
 // names like `CON`, `PRN`, etc.
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::services::model_manager;
 
@@ -277,7 +277,7 @@ pub fn list_all_accounts() -> Vec<super::account::OAuthAccountSummary> {
 /// in production code; kept so the test suite can point at a temp dir without
 /// monkey-patching `echobird_dir`.
 #[cfg(test)]
-pub fn path_at(dir: &Path, provider: OAuthProvider, file_name: &str) -> PathBuf {
+pub fn path_at(dir: &std::path::Path, provider: OAuthProvider, file_name: &str) -> PathBuf {
     dir.join(format!("{}-{}.json", provider.as_str(), file_name))
 }
 

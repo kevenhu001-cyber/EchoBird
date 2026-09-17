@@ -115,7 +115,7 @@ pub async fn complete_login(
     // strip it so we don't send back a malformed token-exchange body.
     let (pure_code, fragment_state) = split_code_state(code);
     let effective_state = if !fragment_state.is_empty() {
-        fragment_state
+        fragment_state.to_string()
     } else {
         state.to_string()
     };

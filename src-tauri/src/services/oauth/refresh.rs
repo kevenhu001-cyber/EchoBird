@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn expiry_from_now_adds_seconds() {
-        let now = chrono::Utc::now();
+        let now = chrono::Utc::now().fixed_offset();
         let s = expiry_from_now(3600);
         let parsed = chrono::DateTime::parse_from_rfc3339(&s).unwrap();
         let delta = (parsed - now).num_seconds();
