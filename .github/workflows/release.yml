@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build (e.g. v5.7.4). Must already exist.'
+        required: true
+        default: 'v5.7.4'
 
 # Opt into Node.js 24 runner for all JavaScript-based actions before the
 # 2026-06-02 forced switch (mirrors the same opt-in in ci.yml).
@@ -29,7 +35,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
+          # Tag pushes use the ref; manual dispatches pass the tag explicitly.
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           set -euo pipefail
           # Reuse an existing draft for this tag (safe on workflow re-runs),
@@ -151,7 +158,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           set -euo pipefail
           VER="${TAG#v}"
