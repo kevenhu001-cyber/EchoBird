@@ -260,6 +260,14 @@ fn urlencoding(s: &str) -> String {
     url::form_urlencoded::byte_serialize(s.as_bytes()).collect::<String>()
 }
 
+/// Test-only helper for JWT fixtures (encodes the payload half).
+#[cfg(test)]
+fn base64_url_encode(s: &str) -> String {
+    use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+    use base64::Engine;
+    URL_SAFE_NO_PAD.encode(s.as_bytes())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -292,10 +300,4 @@ mod tests {
         assert!(s.is_empty());
         assert!(e.is_empty());
     }
-}
-
-fn base64_url_encode(s: &str) -> String {
-    use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-    use base64::Engine;
-    URL_SAFE_NO_PAD.encode(s.as_bytes())
 }
