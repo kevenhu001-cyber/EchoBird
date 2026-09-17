@@ -15,6 +15,7 @@ pub mod llm_client;
 pub mod local_llm;
 pub mod model_directory;
 pub mod model_manager;
+pub mod oauth;
 pub mod parasite;
 pub mod process_manager;
 pub mod self_update;
