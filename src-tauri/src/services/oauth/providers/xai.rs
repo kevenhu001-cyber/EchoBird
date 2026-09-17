@@ -60,5 +60,5 @@ pub async fn submit_api_key(
     Ok(account)
 }
 
-/// Stub for the provider dispatcher. xAI doesn't refresh, but the dispatcher
-/// calls us anyway so we still need to implement it.
+// Stub for the provider dispatcher. xAI doesn't refresh, but the dispatcher
+// calls us anyway so we still need to implement it.
