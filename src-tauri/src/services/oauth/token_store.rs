@@ -49,37 +49,45 @@ pub fn ensure_dir() {
 /// path so different providers don't collide and the same provider's
 /// re-login updates the existing record rather than creating a duplicate.
 ///
-/// We sanitize for the filesystem (not for display): lowercase, replace
-/// every non `[a-z0-9-]` with `-`, collapse runs of `-`, trim leading/trailing
-/// `-`, then cap at 64 chars. Windows reserved names are sidestepped by the
-/// provider prefix + the leading character always being a letter (since
-/// every provider string starts with a letter).
+/// The identifier is sanitized for the filesystem (not for display):
+/// lowercase, every non `[a-z0-9-]` becomes `-`, runs of `-` collapse,
+/// leading/trailing `-` trim. An identifier that sanitizes to nothing
+/// (e.g. `"////"`) falls back to a stable hash so the file is still
+/// writeable and re-logins overwrite it. The joined name caps at 64 chars.
+/// Windows reserved names are sidestepped by the provider prefix (every
+/// provider string starts with a letter).
 pub fn file_name_for(provider: OAuthProvider, identifier: &str) -> String {
-    let raw = format!("{}-{}", provider.as_str(), identifier);
-    let mut out = String::with_capacity(raw.len());
+    let clean = sanitize_segment(identifier);
+    let stem = if clean.is_empty() {
+        simple_hash(identifier)
+    } else {
+        clean
+    };
+    let mut name = format!("{}-{stem}", provider.as_str());
+    if name.len() > 64 {
+        name.truncate(64);
+        name = name.trim_end_matches('-').to_string();
+    }
+    name
+}
+
+fn sanitize_segment(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
     let mut prev_dash = false;
-    for ch in raw.chars() {
+    for ch in s.chars() {
         let lower = ch.lower();
         let is_safe = lower.is_ascii_alphanumeric() || lower == '-';
         if is_safe {
             out.push(lower);
-            prev_dash = false;
+            // A literal `-` also counts as a dash run, or separators
+            // accumulate (`"a- b"` → `"a--b"` instead of `"a-b"`).
+            prev_dash = lower == '-';
         } else if !prev_dash {
             out.push('-');
             prev_dash = true;
         }
     }
-    let trimmed = out.trim_matches('-').to_string();
-    if trimmed.is_empty() {
-        // Fallback for pathological identifiers — use a stable hash so the
-        // file is still writeable and re-logins overwrite it.
-        let hash = simple_hash(identifier);
-        format!("{}-{}", provider.as_str(), hash)
-    } else if trimmed.len() > 64 {
-        trimmed[..64].trim_end_matches('-').to_string()
-    } else {
-        trimmed
-    }
+    out.trim_matches('-').to_string()
 }
 
 fn simple_hash(s: &str) -> String {

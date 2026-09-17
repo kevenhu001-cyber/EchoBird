@@ -227,15 +227,23 @@ fn parse_jwt_claims(jwt: &str) -> (String, String) {
         Ok(v) => v,
         Err(_) => return (String::new(), String::new()),
     };
-    // OpenAI's id_token puts `sub` = account id, `email` = email.
+    // OpenAI's id_token puts `sub` = account id, `email` = email. Some
+    // shapes nest the account id instead — try the plain string first,
+    // then the known nested locations.
     let sub = v
         .get("sub")
-        .or_else(|| v.get("https://api.openai.com/auth"))
-        .and_then(|x| x.get("chatgpt_account_id"))
-        .or_else(|| v.get("chatgpt_account_id"))
         .and_then(|x| x.as_str())
-        .unwrap_or("")
-        .to_string();
+        .map(str::to_string)
+        .or_else(|| {
+            v.get("chatgpt_account_id")
+                .or_else(|| {
+                    v.get("https://api.openai.com/auth")
+                        .and_then(|x| x.get("chatgpt_account_id"))
+                })
+                .and_then(|x| x.as_str())
+                .map(str::to_string)
+        })
+        .unwrap_or_default();
     let email = v
         .get("email")
         .and_then(|x| x.as_str())
