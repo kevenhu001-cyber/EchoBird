@@ -17,7 +17,9 @@ use futures_util::StreamExt;
 use tokio::io::AsyncWriteExt;
 
 use super::config::{self, installed_version};
-use super::{base_url, bin_dir, binary_path, config_path, release_asset, root_dir, version_path, GITHUB_REPO};
+use super::{
+    base_url, bin_dir, binary_path, config_path, release_asset, root_dir, version_path, GITHUB_REPO,
+};
 
 /// Tauri-managed shared state (registered via `.manage()`).
 #[derive(Clone, Default)]
@@ -91,10 +93,7 @@ impl CliproxyState {
         // config fails fast here instead of surfacing as mysterious 503s.
         match health_wait().await {
             Ok(()) => {
-                self.inner
-                    .lock()
-                    .expect("cliproxy state poisoned")
-                    .child = Some(child);
+                self.inner.lock().expect("cliproxy state poisoned").child = Some(child);
                 log::info!("[Cliproxy] managed engine up at {}", base_url());
                 Ok(())
             }
@@ -159,7 +158,9 @@ async fn download_binary() -> Result<String, String> {
         .map_err(|e| format!("HTTP client failed: {e}"))?;
 
     let tag: String = client
-        .get(format!("https://api.github.com/repos/{GITHUB_REPO}/releases/latest"))
+        .get(format!(
+            "https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+        ))
         .send()
         .await
         .map_err(|e| format!("Cannot reach GitHub releases: {e}"))?
@@ -266,7 +267,9 @@ async fn verify_checksum(
     if got.eq_ignore_ascii_case(want.trim()) {
         Ok(())
     } else {
-        Err(format!("Checksum mismatch for {archive} — refusing to install"))
+        Err(format!(
+            "Checksum mismatch for {archive} — refusing to install"
+        ))
     }
 }
 

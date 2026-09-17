@@ -130,7 +130,11 @@ async fn delete_req(path: &str) -> Result<(), String> {
 /// Surface the server's own error message when it bothers to send one.
 fn management_error(text: &str, status: u16) -> String {
     if let Ok(v) = serde_json::from_str::<serde_json::Value>(text) {
-        if let Some(msg) = v.get("error").and_then(|e| e.as_str()).filter(|s| !s.is_empty()) {
+        if let Some(msg) = v
+            .get("error")
+            .and_then(|e| e.as_str())
+            .filter(|s| !s.is_empty())
+        {
             return format!("Engine rejected the request ({status}): {msg}");
         }
     }
@@ -138,7 +142,10 @@ fn management_error(text: &str, status: u16) -> String {
     if trimmed.is_empty() {
         format!("Engine rejected the request ({status})")
     } else {
-        format!("Engine rejected the request ({status}): {}", trimmed.chars().take(300).collect::<String>())
+        format!(
+            "Engine rejected the request ({status}): {}",
+            trimmed.chars().take(300).collect::<String>()
+        )
     }
 }
 

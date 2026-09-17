@@ -141,8 +141,7 @@ pub fn save_account(account: &OAuthAccount) -> Result<(), String> {
     let envelope = serde_json::json!({ "v": 1, "ct": ct });
     let bytes = serde_json::to_vec_pretty(&envelope)
         .map_err(|e| format!("Failed to serialize envelope: {}", e))?;
-    fs::write(&path, &bytes)
-        .map_err(|e| format!("Failed to write {}: {}", path.display(), e))?;
+    fs::write(&path, &bytes).map_err(|e| format!("Failed to write {}: {}", path.display(), e))?;
     log::info!(
         "[OAuthStore] Saved account {}/{} ({} bytes)",
         account.provider.as_str(),
@@ -156,13 +155,10 @@ pub fn save_account(account: &OAuthAccount) -> Result<(), String> {
 /// file is missing, unreadable, or the encryption key has changed (decryption
 /// produces garbage, then UTF-8 validation fails — we surface that as
 /// "environment changed").
-pub fn load_account(
-    provider: OAuthProvider,
-    file_name: &str,
-) -> Result<OAuthAccount, String> {
+pub fn load_account(provider: OAuthProvider, file_name: &str) -> Result<OAuthAccount, String> {
     let path = path_for(provider, file_name);
-    let content = fs::read_to_string(&path)
-        .map_err(|e| format!("Cannot read {}: {}", path.display(), e))?;
+    let content =
+        fs::read_to_string(&path).map_err(|e| format!("Cannot read {}: {}", path.display(), e))?;
 
     // Try the envelope format first.
     if let Ok(env) = serde_json::from_str::<serde_json::Value>(&content) {
@@ -254,11 +250,7 @@ pub fn delete_account_file(provider: OAuthProvider, file_name: &str) -> bool {
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => false,
         Err(e) => {
-            log::error!(
-                "[OAuthStore] Failed to delete {}: {}",
-                path.display(),
-                e
-            );
+            log::error!("[OAuthStore] Failed to delete {}: {}", path.display(), e);
             false
         }
     }

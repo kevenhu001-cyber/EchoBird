@@ -47,10 +47,7 @@ use super::callback_html;
 /// happen upstream in the provider's login() impl, not here.
 #[derive(Debug)]
 pub enum CallbackResult {
-    Success {
-        code: String,
-        state: String,
-    },
+    Success { code: String, state: String },
     Error(String),
 }
 
@@ -190,17 +187,11 @@ async fn handle_callback(
 }
 
 async fn handle_success() -> impl IntoResponse {
-    (
-        StatusCode::OK,
-        Html(generic_success_page()),
-    )
+    (StatusCode::OK, Html(generic_success_page()))
 }
 
 async fn handle_error() -> impl IntoResponse {
-    (
-        StatusCode::OK,
-        Html(generic_error_page()),
-    )
+    (StatusCode::OK, Html(generic_error_page()))
 }
 
 fn success_page(provider_label: &str) -> Response {

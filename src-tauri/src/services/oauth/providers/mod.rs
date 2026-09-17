@@ -33,22 +33,30 @@ pub async fn start_login(
     provider: OAuthProvider,
     pkce_codes: Option<&super::pkce::PkceCodes>,
     state: &str,
-) -> Result<(String, tokio::sync::oneshot::Receiver<super::callback_server::CallbackResult>), String> {
+) -> Result<
+    (
+        String,
+        tokio::sync::oneshot::Receiver<super::callback_server::CallbackResult>,
+    ),
+    String,
+> {
     match provider {
-        OAuthProvider::Codex => codex::start_login(pkce_codes.expect("codex requires PKCE"), state).await,
-        OAuthProvider::Claude => claude::start_login(pkce_codes.expect("claude requires PKCE"), state).await,
+        OAuthProvider::Codex => {
+            codex::start_login(pkce_codes.expect("codex requires PKCE"), state).await
+        }
+        OAuthProvider::Claude => {
+            claude::start_login(pkce_codes.expect("claude requires PKCE"), state).await
+        }
         OAuthProvider::Xai => {
             // xAI doesn't use a callback server. The frontend collects the
             // API key directly via a text input and calls submit_xai_key.
             Err("xAI uses API-key input, not OAuth login".to_string())
         }
         // Implemented in M4.
-        OAuthProvider::Gemini | OAuthProvider::Antigravity | OAuthProvider::Kimi => {
-            Err(format!(
-                "{} OAuth login not yet implemented (M4)",
-                provider.as_str()
-            ))
-        }
+        OAuthProvider::Gemini | OAuthProvider::Antigravity | OAuthProvider::Kimi => Err(format!(
+            "{} OAuth login not yet implemented (M4)",
+            provider.as_str()
+        )),
     }
 }
 
@@ -67,27 +75,23 @@ pub async fn complete_login(
 ) -> Result<OAuthAccount, String> {
     match provider {
         OAuthProvider::Codex => {
-            codex::complete_login(code, pkce_codes.expect("codex requires PKCE"), redirect_uri).await
+            codex::complete_login(code, pkce_codes.expect("codex requires PKCE"), redirect_uri)
+                .await
         }
         OAuthProvider::Claude => {
             claude::complete_login(code, state, pkce_codes.expect("claude requires PKCE")).await
         }
         OAuthProvider::Xai => Err("xAI uses submit_xai_key".to_string()),
-        OAuthProvider::Gemini | OAuthProvider::Antigravity | OAuthProvider::Kimi => {
-            Err(format!(
-                "{} OAuth login not yet implemented (M4)",
-                provider.as_str()
-            ))
-        }
+        OAuthProvider::Gemini | OAuthProvider::Antigravity | OAuthProvider::Kimi => Err(format!(
+            "{} OAuth login not yet implemented (M4)",
+            provider.as_str()
+        )),
     }
 }
 
 /// Refresh an existing account's token in place. `account.token` is mutated;
 /// `account.expires_at` and `account.last_refresh` get updated by the caller.
-pub async fn refresh(
-    provider: OAuthProvider,
-    account: &mut OAuthAccount,
-) -> Result<(), String> {
+pub async fn refresh(provider: OAuthProvider, account: &mut OAuthAccount) -> Result<(), String> {
     match provider {
         OAuthProvider::Codex => codex::refresh(account).await,
         OAuthProvider::Claude => claude::refresh(account).await,
@@ -96,11 +100,9 @@ pub async fn refresh(
             // keep retrying.
             Ok(())
         }
-        OAuthProvider::Gemini | OAuthProvider::Antigravity | OAuthProvider::Kimi => {
-            Err(format!(
-                "{} refresh not yet implemented (M4)",
-                provider.as_str()
-            ))
-        }
+        OAuthProvider::Gemini | OAuthProvider::Antigravity | OAuthProvider::Kimi => Err(format!(
+            "{} refresh not yet implemented (M4)",
+            provider.as_str()
+        )),
     }
 }

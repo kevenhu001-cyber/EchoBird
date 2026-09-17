@@ -95,7 +95,12 @@ pub fn build_auth_url(state: &str, challenge: &str) -> String {
     ];
     let qs: String = params
         .into_iter()
-        .map(|(k, v)| format!("{k}={}", url::form_urlencoded::byte_serialize(v.as_bytes()).collect::<String>()))
+        .map(|(k, v)| {
+            format!(
+                "{k}={}",
+                url::form_urlencoded::byte_serialize(v.as_bytes()).collect::<String>()
+            )
+        })
         .collect::<Vec<_>>()
         .join("&");
     format!("{AUTH_URL}?{qs}")
@@ -143,17 +148,20 @@ pub async fn complete_login(
             status, text
         ));
     }
-    let tr: TokenResponse = serde_json::from_str(&text)
-        .map_err(|e| format!("Parse Claude token response: {e}"))?;
+    let tr: TokenResponse =
+        serde_json::from_str(&text).map_err(|e| format!("Parse Claude token response: {e}"))?;
 
-    let account_id = tr.account.as_ref().and_then(|a| {
-        if a.uuid.is_empty() {
-            None
-        } else {
-            Some(a.uuid.clone())
-        }
-    })
-    .unwrap_or_default();
+    let account_id = tr
+        .account
+        .as_ref()
+        .and_then(|a| {
+            if a.uuid.is_empty() {
+                None
+            } else {
+                Some(a.uuid.clone())
+            }
+        })
+        .unwrap_or_default();
     let email = tr
         .account
         .as_ref()
@@ -253,13 +261,10 @@ pub async fn refresh(account: &mut OAuthAccount) -> Result<(), String> {
             // Refresh token rejected — user must re-login.
             account.status = OAuthStatus::RefreshFailed;
         }
-        return Err(format!(
-            "Claude refresh failed (HTTP {}): {}",
-            status, text
-        ));
+        return Err(format!("Claude refresh failed (HTTP {}): {}", status, text));
     }
-    let tr: TokenResponse = serde_json::from_str(&text)
-        .map_err(|e| format!("Parse Claude refresh response: {e}"))?;
+    let tr: TokenResponse =
+        serde_json::from_str(&text).map_err(|e| format!("Parse Claude refresh response: {e}"))?;
     account.token["access_token"] = serde_json::Value::String(tr.access_token);
     // Some refresh responses omit refresh_token; keep the old one.
     if !tr.refresh_token.is_empty() {

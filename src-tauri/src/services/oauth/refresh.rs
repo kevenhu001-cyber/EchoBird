@@ -131,9 +131,7 @@ fn refresh_lock_for(key: &str) -> Arc<TokioMutex<()>> {
 /// avoid fractional seconds — every comparison on the UI side parses this
 /// back, and precision <1s doesn't help anyone.
 pub fn now_iso8601() -> String {
-    chrono::Utc::now()
-        .format("%Y-%m-%dT%H:%M:%SZ")
-        .to_string()
+    chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string()
 }
 
 /// Compute the ISO 8601 expiry string from `expires_in` seconds (what the
@@ -232,9 +230,6 @@ mod tests {
             account_key(OAuthProvider::Claude, "x.json"),
             "claude:x.json"
         );
-        assert_eq!(
-            account_key(OAuthProvider::Codex, "x.json"),
-            "codex:x.json"
-        );
+        assert_eq!(account_key(OAuthProvider::Codex, "x.json"), "codex:x.json");
     }
 }

@@ -92,8 +92,7 @@ pub async fn cliproxy_apply_to_tool(tool_id: String, model: String) -> Result<St
         relay_mode: Some(true),
         one_m_context: None,
     };
-    let result =
-        crate::services::tool_config_manager::apply_model_to_tool(&tool_id, info).await;
+    let result = crate::services::tool_config_manager::apply_model_to_tool(&tool_id, info).await;
     if result.success {
         Ok(result.message)
     } else {

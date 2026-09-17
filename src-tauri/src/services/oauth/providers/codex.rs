@@ -114,8 +114,8 @@ pub async fn complete_login(
             status, text
         ));
     }
-    let tr: TokenResp = serde_json::from_str(&text)
-        .map_err(|e| format!("Parse Codex token response: {e}"))?;
+    let tr: TokenResp =
+        serde_json::from_str(&text).map_err(|e| format!("Parse Codex token response: {e}"))?;
 
     // Decode id_token JWT (no signature verification — we trust the TLS channel
     // to OpenAI's auth server). We only need `sub` (account id) and `email`.
@@ -194,13 +194,10 @@ pub async fn refresh(account: &mut OAuthAccount) -> Result<(), String> {
         if lower.contains("refresh_token_reused") {
             account.status = OAuthStatus::RefreshFailed;
         }
-        return Err(format!(
-            "Codex refresh failed (HTTP {}): {}",
-            status, text
-        ));
+        return Err(format!("Codex refresh failed (HTTP {}): {}", status, text));
     }
-    let tr: TokenResp = serde_json::from_str(&text)
-        .map_err(|e| format!("Parse Codex refresh response: {e}"))?;
+    let tr: TokenResp =
+        serde_json::from_str(&text).map_err(|e| format!("Parse Codex refresh response: {e}"))?;
     account.token["access_token"] = serde_json::Value::String(tr.access_token);
     account.token["id_token"] = serde_json::Value::String(tr.id_token);
     account.token["expires_in"] = serde_json::Value::Number(tr.expires_in.into());

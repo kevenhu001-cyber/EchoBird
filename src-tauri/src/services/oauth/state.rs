@@ -10,9 +10,9 @@
 // running task list knows which provider started which server, so we just need
 // a globally-unique token to bind the redirect back to the waiting task.
 
-use rand::RngCore;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
+use rand::RngCore;
 
 /// 32 random bytes → 43 URL-safe base64 chars. Plenty of entropy for CSRF.
 pub fn generate_state() -> String {

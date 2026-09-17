@@ -8,7 +8,9 @@ use std::fs;
 
 use rand::RngCore;
 
-use super::{api_key_path, auth_dir, config_path, root_dir, secret_path, CLIPROXY_HOST, CLIPROXY_PORT};
+use super::{
+    api_key_path, auth_dir, config_path, root_dir, secret_path, CLIPROXY_HOST, CLIPROXY_PORT,
+};
 
 /// Read the persisted management key, generating + storing one first run.
 pub fn ensure_secret() -> Result<String, String> {
@@ -34,10 +36,8 @@ pub fn write_config() -> Result<(), String> {
     let secret = ensure_secret()?;
     let api_key = ensure_api_key()?;
     let dir = root_dir();
-    fs::create_dir_all(&dir)
-        .map_err(|e| format!("Cannot create {}: {e}", dir.display()))?;
-    fs::create_dir_all(auth_dir())
-        .map_err(|e| format!("Cannot create auth dir: {e}"))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Cannot create {}: {e}", dir.display()))?;
+    fs::create_dir_all(auth_dir()).map_err(|e| format!("Cannot create auth dir: {e}"))?;
     // The management panel auto-downloads from GitHub on first access;
     // EchoBird ships its own UI, so keep the embedded instance quiet.
     let auth_dir = auth_dir().display().to_string();

@@ -203,9 +203,18 @@ mod tests {
     #[test]
     fn provider_parse_accepts_legacy_aliases() {
         assert_eq!(OAuthProvider::parse("codex").unwrap(), OAuthProvider::Codex);
-        assert_eq!(OAuthProvider::parse("openai").unwrap(), OAuthProvider::Codex);
-        assert_eq!(OAuthProvider::parse("claude").unwrap(), OAuthProvider::Claude);
-        assert_eq!(OAuthProvider::parse("anthropic").unwrap(), OAuthProvider::Claude);
+        assert_eq!(
+            OAuthProvider::parse("openai").unwrap(),
+            OAuthProvider::Codex
+        );
+        assert_eq!(
+            OAuthProvider::parse("claude").unwrap(),
+            OAuthProvider::Claude
+        );
+        assert_eq!(
+            OAuthProvider::parse("anthropic").unwrap(),
+            OAuthProvider::Claude
+        );
         assert_eq!(OAuthProvider::parse("xai").unwrap(), OAuthProvider::Xai);
         assert_eq!(OAuthProvider::parse("grok").unwrap(), OAuthProvider::Xai);
         assert!(OAuthProvider::parse("nope").is_err());

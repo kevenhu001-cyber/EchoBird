@@ -61,19 +61,16 @@ pub async fn start_login(
     // PKCE providers (Codex, Claude, future Gemini/Antigravity) need a fresh
     // verifier + challenge per attempt. xAI / Kimi don't use them.
     let (pkce, state_value) = match provider {
-        OAuthProvider::Codex | OAuthProvider::Claude => (
-            Some(pkce::generate_pkce()),
-            state::generate_state(),
-        ),
-        OAuthProvider::Gemini | OAuthProvider::Antigravity => (
-            Some(pkce::generate_pkce()),
-            state::generate_state(),
-        ),
+        OAuthProvider::Codex | OAuthProvider::Claude => {
+            (Some(pkce::generate_pkce()), state::generate_state())
+        }
+        OAuthProvider::Gemini | OAuthProvider::Antigravity => {
+            (Some(pkce::generate_pkce()), state::generate_state())
+        }
         OAuthProvider::Kimi | OAuthProvider::Xai => (None, String::new()),
     };
     let pkce_ref = pkce.as_ref();
-    let (url, rx) =
-        providers::start_login(provider, pkce_ref, &state_value).await?;
+    let (url, rx) = providers::start_login(provider, pkce_ref, &state_value).await?;
     // Stash PKCE on the receiver via a small wrapper channel. We can't
     // add fields to oneshot::Receiver, so we wrap the whole call in a
     // small async block that re-runs complete_login using the same pkce.
@@ -146,10 +143,7 @@ pub fn remember_pkce_for_state(state: &str, pkce: pkce::PkceCodes) {
 /// Read an OAuth account from disk by provider + file_name. Used by the
 /// proxy layer to resolve `oauth_account_id` in a relay file to a real
 /// access token.
-pub fn read_account(
-    provider: OAuthProvider,
-    file_name: &str,
-) -> Result<OAuthAccount, String> {
+pub fn read_account(provider: OAuthProvider, file_name: &str) -> Result<OAuthAccount, String> {
     token_store::load_account(provider, file_name)
 }
 
@@ -160,9 +154,7 @@ pub fn read_account(
 /// performs the read + decrypt + (maybe) refresh in one shot, single-flight
 /// refreshing when needed. Returns `(provider, access_token)` so callers
 /// can route the request to the right upstream URL.
-pub async fn get_valid_access_token(
-    account_id: &str,
-) -> Result<(OAuthProvider, String), String> {
+pub async fn get_valid_access_token(account_id: &str) -> Result<(OAuthProvider, String), String> {
     let (provider, file_name) = parse_account_id(account_id)?;
     let mut account = token_store::load_account(provider, &file_name)?;
     if refresh::needs_refresh(&account) {
@@ -218,9 +210,7 @@ pub async fn get_valid_access_token(
 ///
 /// Format: `<provider>:<file_name>`. Provider comes first so a string
 /// starting with `codex:`, `claude:`, etc. is unambiguously tagged.
-pub fn parse_account_id(
-    account_id: &str,
-) -> Result<(OAuthProvider, String), String> {
+pub fn parse_account_id(account_id: &str) -> Result<(OAuthProvider, String), String> {
     let (provider_str, file_name) = account_id
         .split_once(':')
         .ok_or_else(|| format!("Invalid OAuth account id: {account_id}"))?;
