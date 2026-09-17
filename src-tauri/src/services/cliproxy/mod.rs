@@ -21,7 +21,7 @@ pub mod config;
 pub mod management;
 pub mod process;
 
-pub use process::CliproxyState;
+pub use process::{CliproxyState, CliproxyStatus};
 
 use std::path::PathBuf;
 
