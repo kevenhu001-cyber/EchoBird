@@ -1,6 +1,15 @@
 // Sidebar navigation component
 import { useState, useEffect } from 'react';
-import { Box, Server, FolderHeart, Trophy, Monitor, Download, RefreshCw } from 'lucide-react';
+import {
+  Box,
+  Server,
+  FolderHeart,
+  Trophy,
+  Monitor,
+  Download,
+  RefreshCw,
+  KeyRound,
+} from 'lucide-react';
 import { NavItem } from './NavItem';
 import { useI18n } from '../hooks/useI18n';
 import * as api from '../api/tauri';
@@ -15,6 +24,7 @@ export type PageType =
   | 'apps'
   | 'aiCareer'
   | 'myProjects'
+  | 'account'
   | 'localLlm'
   | 'mother'
   | 'feedback';
@@ -137,6 +147,12 @@ export const Sidebar = ({
           label={t('nav.myProjects')}
           active={activePage === 'myProjects'}
           onClick={() => onPageChange('myProjects')}
+        />
+        <NavItem
+          icon={<KeyRound size={20} />}
+          label={t('nav.account')}
+          active={activePage === 'account'}
+          onClick={() => onPageChange('account')}
         />
         {isFullEdition && (
           <NavItem

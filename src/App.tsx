@@ -49,6 +49,7 @@ import {
 } from './pages/LocalServer';
 import { MotherAgentProvider, MotherAgentMain, MotherAgentPanel } from './pages/MotherAgent';
 import { FeedbackMain } from './pages/Feedback';
+import { AccountHubMain } from './pages/AccountHub';
 import { MyProjectsMain, MyProjectsPanel, MyProjectsBottom } from './pages/MyProjects';
 import { AiCareerMain, AiCareerPanel, AiCareerTitleActions } from './pages/AiCareer';
 import { useMyProjectsStore } from './stores/myProjectsStore';
@@ -274,6 +275,7 @@ function App() {
                                       {is('aiCareer') && t('page.aiCareer')}
                                       {is('localLlm') && t('page.localServer')}
                                       {is('mother') && t('page.motherAgent')}
+                                      {is('account') && t('page.account')}
                                       {is('feedback') && t('page.feedback')}
                                     </h2>
                                     <div className="page-kicker truncate" aria-hidden="true">
@@ -284,6 +286,7 @@ function App() {
                                       {is('aiCareer') && 'CAREER'}
                                       {is('localLlm') && 'RUNTIME'}
                                       {is('mother') && 'AGENT'}
+                                      {is('account') && 'ACCOUNTS'}
                                       {is('feedback') && 'SUPPORT'}
                                     </div>
                                   </div>
@@ -346,6 +349,9 @@ function App() {
                                 </div>
                                 <div className={pageScroll(is('feedback'))}>
                                   <FeedbackMain />
+                                </div>
+                                <div className={pageScroll(is('account'))}>
+                                  <AccountHubMain />
                                 </div>
                               </section>
                             </main>

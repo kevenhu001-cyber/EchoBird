@@ -21,6 +21,7 @@ export * from './bundled';
 export * from './aiCareer';
 export * from './freeModels';
 export * from './smartRouter';
+export * from './cliproxy';
 
 // ─── Tool APIs ───
 

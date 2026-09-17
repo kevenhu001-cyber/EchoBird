@@ -21,6 +21,7 @@ use commands::tool_commands;
 use commands::agent_commands;
 use commands::ai_career_commands;
 use commands::bundled_commands;
+use commands::cliproxy_commands;
 use commands::parasite_commands;
 use commands::secret_commands;
 use commands::ssh_commands;
@@ -31,6 +32,7 @@ use tauri::tray::TrayIconBuilder;
 use tauri::Manager;
 
 use services::bundled_assets::BundledAssets;
+use services::cliproxy::CliproxyState;
 
 /// Compile-time bundle of every PUBLIC install JSON the smart-install flow
 /// reads. Built here (the only place `docs/api/tools/install/` paths resolve
@@ -652,6 +654,7 @@ pub fn run() {
         .manage(ssh_commands::create_ssh_pool())
         .manage(services::agent_loop::create_session_map())
         .manage(services::parasite::create_parasite_sessions())
+        .manage(CliproxyState::default())
         .setup(move |app| {
             // Clean up orphaned llama-server from a previous EchoBird
             // session. The codex launcher doesn't need this — the proxy
@@ -678,6 +681,19 @@ pub fn run() {
             // for model-id rewriting. Codex CLI and ChatGPT connect directly
             // to their configured Responses endpoint.
             services::anthropic_proxy::spawn_proxy_task();
+
+            // Managed CLIProxyAPI engine for subscription accounts.
+            // Best-effort and opt-in by installation: a missing binary
+            // (the default) just means the Account Hub shows "not
+            // installed" — nothing else changes.
+            {
+                let cliproxy = app.state::<CliproxyState>().clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Err(e) = cliproxy.start().await {
+                        log::info!("[Setup] managed engine not started: {e}");
+                    }
+                });
+            }
 
             // Local OpenAI-compatible smart router on its own loopback port.
             services::smart_router::spawn_proxy_task();
@@ -1005,6 +1021,16 @@ pub fn run() {
             ssh_commands::remove_ssh_server,
             secret_commands::decrypt_secret,
             secret_commands::encrypt_secret,
+            cliproxy_commands::cliproxy_status,
+            cliproxy_commands::cliproxy_download,
+            cliproxy_commands::cliproxy_start,
+            cliproxy_commands::cliproxy_stop,
+            cliproxy_commands::cliproxy_auth_url,
+            cliproxy_commands::cliproxy_auth_status,
+            cliproxy_commands::cliproxy_auth_cancel,
+            cliproxy_commands::cliproxy_accounts,
+            cliproxy_commands::cliproxy_delete_account,
+            cliproxy_commands::cliproxy_apply_to_tool,
             agent_commands::agent_send_message,
             agent_commands::agent_abort,
             agent_commands::agent_reset,
@@ -1051,6 +1077,10 @@ pub fn run() {
                     // session will share the same FIXED proxy port.
                     kill_stale_llama_server();
                     log::info!("[App] Exit: cleaned up llama-server");
+                    // The managed CLIProxyAPI engine is ours — always stop it.
+                    if let Some(cliproxy) = app_handle.try_state::<CliproxyState>() {
+                        let _ = cliproxy.stop();
+                    }
                 }
                 _ => {}
             }
