@@ -687,7 +687,10 @@ pub fn run() {
             // (the default) just means the Account Hub shows "not
             // installed" — nothing else changes.
             {
-                let cliproxy = app.state::<CliproxyState>().clone();
+                // Clone the owned state out of `app`: the setup closure
+                // only lends `&mut App`, which must not escape into the
+                // spawned task.
+                let cliproxy = (*app.state::<CliproxyState>()).clone();
                 tauri::async_runtime::spawn(async move {
                     if let Err(e) = cliproxy.start().await {
                         log::info!("[Setup] managed engine not started: {e}");
