@@ -125,6 +125,7 @@ const ja: Partial<Translations> = {
   'account.tag.antigravity': 'Google Antigravity',
   'account.tag.kimi': 'Moonshot Kimi メンバーシップ',
   'account.tag.xai': 'xAI SuperGrok',
+  'account.tag.devin': 'Cognition Devin',
   'account.login': 'サインイン',
   'account.loggingIn': '待機中…',
   'account.loginSuccess': 'サインインしました',

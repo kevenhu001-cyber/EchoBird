@@ -109,6 +109,7 @@ const en: Translations = {
   'account.tag.antigravity': 'Google Antigravity account',
   'account.tag.kimi': 'Moonshot Kimi membership',
   'account.tag.xai': 'xAI SuperGrok subscription',
+  'account.tag.devin': 'Cognition Devin subscription',
   'account.login': 'Sign in',
   'account.loggingIn': 'Waiting…',
   'account.loginSuccess': 'Signed in',

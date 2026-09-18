@@ -24,6 +24,7 @@ pub fn auth_endpoint(provider: &str) -> Result<String, String> {
         "antigravity" => "antigravity",
         "kimi" => "kimi",
         "xai" | "grok" => "xai",
+        "devin" | "cognition" => "devin",
         other => return Err(format!("Unknown provider: {other}")),
     };
     Ok(format!("{}/{mapped}-auth-url", management_base()))

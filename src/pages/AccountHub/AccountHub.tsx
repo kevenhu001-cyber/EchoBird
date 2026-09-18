@@ -38,6 +38,7 @@ const PROVIDERS: { id: string; name: string; tag: TKey }[] = [
   { id: 'antigravity', name: 'Antigravity', tag: 'account.tag.antigravity' },
   { id: 'kimi', name: 'Kimi', tag: 'account.tag.kimi' },
   { id: 'xai', name: 'xAI', tag: 'account.tag.xai' },
+  { id: 'devin', name: 'Devin', tag: 'account.tag.devin' },
 ];
 
 // The engine waits on a login session for 5 minutes; stop a little earlier.

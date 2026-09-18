@@ -32,6 +32,7 @@ export type TKey =
   | 'account.tag.antigravity'
   | 'account.tag.kimi'
   | 'account.tag.xai'
+  | 'account.tag.devin'
   | 'account.login'
   | 'account.loggingIn'
   | 'account.loginSuccess'

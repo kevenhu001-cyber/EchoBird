@@ -101,6 +101,7 @@ const zhHans: Partial<Translations> = {
   'account.tag.antigravity': 'Google Antigravity 账号',
   'account.tag.kimi': '月之暗面 Kimi 会员',
   'account.tag.xai': 'xAI SuperGrok 订阅',
+  'account.tag.devin': 'Cognition Devin 订阅',
   'account.login': '登录',
   'account.loggingIn': '等待中…',
   'account.loginSuccess': '登录成功',

@@ -121,6 +121,7 @@ const zhHant: Partial<Translations> = {
   'account.tag.antigravity': 'Google Antigravity 帳號',
   'account.tag.kimi': '月之暗面 Kimi 會員',
   'account.tag.xai': 'xAI SuperGrok 訂閱',
+  'account.tag.devin': 'Cognition Devin 訂閱',
   'account.login': '登入',
   'account.loggingIn': '等待中…',
   'account.loginSuccess': '登入成功',
