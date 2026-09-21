@@ -61,6 +61,18 @@ jobs:
         with:
           components: clippy, rustfmt
 
+      # Cache cargo registry + git index only — NOT src-tauri/target.
+      # Earlier versions of this workflow also cached the build output,
+      # keyed solely on Cargo.lock. That surfaced tauri-apps/tauri#13348:
+      # tauri-build bakes absolute paths into its generated permission
+      # files (under target/debug/build/tauri-*/out/permissions/...),
+      # so a cache hit on a target/ populated by a different runner
+      # working directory panics with `failed to read plugin permissions
+      # ... app_hide.toml: No such file or directory` during the next
+      # job's build script. Removing the target/ cache forces a clean
+      # tauri-build run on every CI invocation — slower (clippy job
+      # ~3-5 min cold vs ~2 min warm) but reliable. The registry + git
+      # caches still keep dependency downloads fast.
       - name: Cache cargo registry
         uses: actions/cache@v5
         with:
@@ -72,12 +84,6 @@ jobs:
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Cache cargo build
-        uses: actions/cache@v5
-        with:
-          path: src-tauri/target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install system dependencies
         run: |
