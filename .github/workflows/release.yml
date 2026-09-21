@@ -98,8 +98,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          ref: ${{ env.RELEASE_TAG }}
+        # For tag-push releases, the workflow itself is already running at the
+        # tagged commit. For manual releases, build the branch/commit selected
+        # in the Actions UI; the requested tag is release metadata and does not
+        # need to exist beforehand.
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
