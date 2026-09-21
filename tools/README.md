@@ -37,7 +37,7 @@ Tools that are installed as separate executables:
 - **opencode**: Open Code
 - **pi**: Pi assistant
 - **vibe-trading**: AI quant-research / market-analysis agent (Quant Analysis category)
-- **claudescience**: Claude Science (Science category, noModelConfig showcase, Windows/macOS/Linux)
+- **claudescience**: Claude Science (Science category, configurable via ~/.claude-science/byok.env + ANTHROPIC_* env vars; the official Electron build is OAuth-only — `bun install -g @cometix/cscience` for login-free third-party use, MIT)
 - **openscience**: OpenScience (Science category, open-source Claude Science alternative, web workspace served locally via `openscience serve`; macOS/Linux/Windows)
 - **dsh**: DeepSeek Harness (CLI Code category, DeepSeek's open-source agent harness, developer preview, web UI served locally via `dsh web` at http://127.0.0.1:3080)
 

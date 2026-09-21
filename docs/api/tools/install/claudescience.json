@@ -11,7 +11,7 @@
         "macos_download_x64": "https://downloads.claude.ai/claude-science/latest/mac-x64.dmg",
         "linux_curl": "mkdir -p ~/.local/bin && curl -fL https://downloads.claude.ai/claude-science/latest/linux-x64 -o ~/.local/bin/claude-science && chmod +x ~/.local/bin/claude-science",
         "linux_download": "https://downloads.claude.ai/claude-science/latest/linux-x64",
-        "note": "Claude Science supports Windows x64, macOS and Linux x64. After install, launch with `claude-science serve` — it starts the local daemon and opens the web UI in the browser. Science requires a Claude account login on first launch; EchoBird does not manage models or login for it (Science uses the user's own Claude subscription)."
+        "note": "Claude Science supports Windows x64, macOS and Linux x64. After install, launch with `claude-science serve` — it starts the local daemon and opens the web UI in the browser. EchoBird writes model / base URL / API key to ~/.claude-science/byok.env and forwards those values as env vars when starting the binary. The official Claude Science Electron build is OAuth-only — for truly login-free third-party model use, install the MIT-licensed @cometix/cscience community patch (bun install -g @cometix/cscience, MIT) which accepts the API key from byok.env without an OAuth session."
     },
     "install_flow": {
         "summary": "Download the platform build, complete first-run installation on Windows, place the binary on PATH (Linux) or /Applications (macOS), then launch with `claude-science serve`.",
@@ -21,14 +21,15 @@
             "macOS (Apple Silicon): download https://downloads.claude.ai/claude-science/latest/mac-arm64.dmg, mount it, drag Claude Science.app to /Applications.",
             "macOS (Intel): download https://downloads.claude.ai/claude-science/latest/mac-x64.dmg, same steps.",
             "Linux x64: run `mkdir -p ~/.local/bin && curl -fL https://downloads.claude.ai/claude-science/latest/linux-x64 -o ~/.local/bin/claude-science && chmod +x ~/.local/bin/claude-science` (ensure ~/.local/bin is on PATH; create it if missing).",
-            "After install, tell the user to launch with `claude-science serve` in a terminal — it starts the daemon and opens the web UI. First launch requires Claude account login.",
-            "EchoBird lists Claude Science as a tool card (Science category, 'no model config supported') — it does NOT switch models for Science. Science uses the user's own Claude subscription."
+            "For login-free third-party use: `bun install -g @cometix/cscience` (MIT-licensed community patch by Haleclipse). The patched binary reads ~/.claude-science/byok.env and accepts an API key in place of OAuth — without it, the official binary still requires a Claude account login even after EchoBird writes byok.env.",
+            "After install, tell the user to launch with `claude-science serve` in a terminal — it starts the daemon and opens the web UI.",
+            "EchoBird writes the active model, base URL, API key and OPERON_MODELS to ~/.claude-science/byok.env and forwards them as env vars when starting the binary. No login required when @cometix/cscience is installed."
         ],
         "tell_user": [
             "Which build was installed (Windows x64, macOS arm64/x64, or Linux x64)",
             "Install location (%LOCALAPPDATA%\\Programs\\ClaudeScience on Windows; /Applications/Claude Science.app on macOS; ~/.local/bin/claude-science on Linux)",
             "How to launch: `claude-science serve` in a terminal",
-            "Whether the app opened and first sign-in remains for the user"
+            "Whether the app opened; if it still asks to sign in, the user is running the official build and should `bun install -g @cometix/cscience` for the OAuth-free path"
         ]
     },
     "network_requirements": {

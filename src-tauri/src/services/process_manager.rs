@@ -921,15 +921,32 @@ impl ProcessManager {
             // apostrophe (e.g. a Windows username like O'Brien) can't break the
             // quoting or inject commands.
             let exe_q = exe_path.replace('\'', "''");
+
+            // Claude Science reads ANTHROPIC_* / OPERON_MODELS from
+            // ~/.claude-science/byok.env at startup (via the
+            // @cometix/cscience community patch). The Electron build
+            // accepts env vars directly, so we read the values back
+            // out of byok.env and forward them as Start-Process
+            // -Environment so the user doesn't have to relaunch Claude
+            // Science after every model switch. Other tools are
+            // untouched.
+            let env_arg = if tool_id == "claudescience" {
+                build_claudescience_env_arg()
+            } else {
+                String::new()
+            };
+
             let ps_cmd = match &work_dir {
                 Some(dir) => format!(
-                    "$process = Start-Process '{}' -WorkingDirectory '{}' -PassThru; Write-Output $process.Id",
+                    "$process = Start-Process '{}' -WorkingDirectory '{}'{} -PassThru; Write-Output $process.Id",
                     exe_q,
-                    dir.replace('\'', "''")
+                    dir.replace('\'', "''"),
+                    env_arg
                 ),
                 None => format!(
-                    "$process = Start-Process '{}' -PassThru; Write-Output $process.Id",
-                    exe_q
+                    "$process = Start-Process '{}'{} -PassThru; Write-Output $process.Id",
+                    exe_q,
+                    env_arg
                 ),
             };
 
@@ -1362,6 +1379,73 @@ impl ProcessManager {
 fn is_third_party_codex_base_url(base_url: &str) -> bool {
     !base_url.is_empty()
         && !crate::services::codex_catalog::url_matches_domain(base_url, "api.openai.com")
+}
+
+// Build the PowerShell `-Environment @{…}` argument for the Start-Process
+// call in `start_gui_tool` when launching Claude Science. The Electron
+// build of Claude Science reads `ANTHROPIC_API_KEY` /
+// `ANTHROPIC_BASE_URL` / `OPERON_MODELS` from the process environment
+// when started by the @cometix/cscience community patch (see
+// docs/api/tools/install/claudescience.json). EchoBird persists those
+// values to `~/.claude-science/byok.env`; we re-parse that file here
+// and forward the entries to the spawn so the user doesn't have to
+// restart the terminal between model switches.
+//
+// Returns an empty string (no `-Environment` argument) when byok.env is
+// missing or carries no EchoBird-owned keys — the binary then falls
+// back to its OAuth flow unchanged. PowerShell single-quoted strings
+// escape a literal apostrophe by doubling it (''); we mirror the
+// path-quoting convention already used in `start_gui_tool` so a key
+// like `it's-a-key` can't break out of the string.
+#[cfg(windows)]
+fn build_claudescience_env_arg() -> String {
+    let path = match dirs::home_dir() {
+        Some(h) => h.join(".claude-science").join("byok.env"),
+        None => return String::new(),
+    };
+    let content = match std::fs::read_to_string(&path) {
+        Ok(c) => c,
+        Err(_) => return String::new(),
+    };
+
+    let mut pairs: Vec<(&str, String)> = Vec::new();
+    for line in content.lines() {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with('#') || trimmed.is_empty() {
+            continue;
+        }
+        let Some((k, v)) = trimmed.split_once('=') else {
+            continue;
+        };
+        let key = k.trim();
+        if !matches!(
+            key,
+            "ANTHROPIC_API_KEY"
+                | "ANTHROPIC_BASE_URL"
+                | "ANTHROPIC_AUTH_TOKEN"
+                | "OPERON_MODELS"
+                | "NO_AUTO_UPDATE"
+        ) {
+            continue;
+        }
+        let v = v.trim();
+        let unquoted = v
+            .strip_prefix('"')
+            .and_then(|s| s.strip_suffix('"'))
+            .or_else(|| v.strip_prefix('\'').and_then(|s| s.strip_suffix('\'')))
+            .unwrap_or(v);
+        pairs.push((key, unquoted.to_string()));
+    }
+    if pairs.is_empty() {
+        return String::new();
+    }
+
+    let body = pairs
+        .iter()
+        .map(|(k, v)| format!("'{}'='{}'", k, v.replace('\'', "''")))
+        .collect::<Vec<_>>()
+        .join("; ");
+    format!(" -Environment @{{{}}}", body)
 }
 
 // ─── Platform helpers ───

@@ -4,6 +4,7 @@
 mod aider;
 mod claudecode;
 mod claudedesktop;
+mod claudescience;
 mod codex;
 mod dsh;
 mod generic;
@@ -31,6 +32,7 @@ use claudecode::{
     restore_claudecode_to_official,
 };
 use claudedesktop::{apply_claudedesktop, read_claudedesktop, restore_claudedesktop_to_official};
+use claudescience::{apply_claudescience, read_claudescience, restore_claudescience_to_official};
 pub(crate) use codex::{apply_codex, apply_codex_at};
 use codex::{read_codex, restore_codex_to_official};
 use dsh::{apply_dsh, read_dsh, restore_dsh_to_official};
@@ -307,6 +309,13 @@ pub async fn apply_model_to_tool(tool_id: &str, model_info: ModelInfo) -> ApplyR
         // but writes ~/.claude/settings.json env vars + its own relay file.
         "claudecode" => return apply_claudecode(&model_info),
 
+        // Claude Science — writes ~/.claude-science/byok.env (consumed by
+        // the @cometix/cscience community patch; the official Electron
+        // build will still gate on OAuth, see docs/api/tools/install/
+        // claudescience.json). Anthropic protocol only — Claude Science
+        // has no other provider schema.
+        "claudescience" => return apply_claudescience(&model_info),
+
         // Type 4: YAML
         "aider" => return apply_aider(&model_info),
 
@@ -370,6 +379,9 @@ pub async fn restore_tool_to_official(tool_id: &str) -> ApplyResult {
     }
     if tool_id == "claudecode" {
         return restore_claudecode_to_official();
+    }
+    if tool_id == "claudescience" {
+        return restore_claudescience_to_official();
     }
     if tool_id == "grok" {
         return restore_grok_to_official();
@@ -461,6 +473,7 @@ pub async fn get_tool_model_info(tool_id: &str) -> Option<ModelInfo> {
         "codex" | "chatgptdesktop" => return read_codex(),
         "claudedesktop" => return read_claudedesktop(),
         "claudecode" => return read_claudecode(),
+        "claudescience" => return read_claudescience(),
         "aider" => return read_aider(),
         "grok" => return read_grok(),
         "qwencode" => return read_qwen_code(),

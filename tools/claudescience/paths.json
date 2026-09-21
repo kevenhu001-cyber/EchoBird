@@ -1,7 +1,7 @@
 {
     "name": "Claude Science",
     "category": "Science",
-    "noModelConfig": true,
+    "noModelConfig": false,
     "apiProtocol": [
         "anthropic"
     ],
@@ -10,7 +10,7 @@
     "command": "",
     "startCommand": "claude-science serve",
     "configDir": "~/.claude-science",
-    "configFile": "~/.claude-science/preferences.json",
+    "configFile": "~/.claude-science/byok.env",
     "requireConfigFile": false,
     "paths": {
         "win32": [
@@ -22,7 +22,8 @@
         "linux": [
             "~/.local/bin/claude-science",
             "/usr/local/bin/claude-science",
-            "/usr/bin/claude-science"
+            "/usr/bin/claude-science",
+            "~/.bun/bin/cscience"
         ]
     },
     "installHints": {
